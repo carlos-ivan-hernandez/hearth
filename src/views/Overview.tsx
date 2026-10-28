@@ -1,7 +1,7 @@
 import {BarList} from '../components/BarList';
 import {Line, Panel, Stat} from '../components/fields';
 import {StatusChip} from '../components/StatusChip';
-import {type BuildCosts, dti, pct, reserveNeeded, usd, verdict} from '../finance';
+import {armReset, type BuildCosts, dti, LOAN_TYPES, pct, reserveNeeded, usd, verdict} from '../finance';
 import type {Plan} from '../plan';
 
 const HEADLINES = {
@@ -15,6 +15,11 @@ export const Overview = ({plan, build}: {plan: Plan; build: BuildCosts}) => {
   const {back} = dti(plan, build.housing.total);
   const left = plan.savings - build.cashNeeded;
   const h = build.housing;
+  const reset = armReset(plan, build);
+  const loanName =
+    plan.loanType === 'fixed'
+      ? `${plan.termYears}-year fixed`
+      : `${plan.termYears}-year ${LOAN_TYPES[plan.loanType].label}`;
 
   return (
     <div className='flex flex-col gap-6'>
@@ -22,8 +27,9 @@ export const Overview = ({plan, build}: {plan: Plan; build: BuildCosts}) => {
         <StatusChip status={overall} />
         <h2 className='text-xl font-semibold tracking-tight'>{HEADLINES[overall]}</h2>
         <p className='text-sm text-muted'>
-          Borrowing {usd(build.loan)} at {plan.rate}% for {plan.termYears} years, with {plan.downPct}% down, comes to{' '}
-          {usd(h.total)} a month for housing.
+          Borrowing {usd(build.loan)} on a {loanName} at {plan.rate}%, with {plan.downPct}% down, comes to{' '}
+          {usd(h.total)} a month for housing
+          {reset ? ` until year ${reset.year + 1}, then about ${usd(reset.expected.total)}` : ''}.
         </p>
       </div>
 
@@ -34,18 +40,18 @@ export const Overview = ({plan, build}: {plan: Plan; build: BuildCosts}) => {
           note={`${pct(back)} of income with other debts`}
         />
         <Stat
-          label='Mortgage'
-          value={usd(build.loan)}
-          note={`${plan.downPct}% down`}
+          label='While building'
+          value={usd(build.buildMonthly.peak)}
+          note='Rent and loan interest, per month at the end'
         />
         <Stat
-          label='Cash up front'
+          label='Cash at closing'
           value={usd(build.cashNeeded)}
           note={`${usd(left)} of savings left`}
         />
         <Stat
           label='Cost to build'
-          value={usd(build.allIn)}
+          value={usd(build.houseCost)}
           note={`Worth ${usd(plan.completedValue)} when done`}
         />
       </div>
@@ -77,16 +83,10 @@ export const Overview = ({plan, build}: {plan: Plan; build: BuildCosts}) => {
         >
           <div className='group-card'>
             <BarList
-              total={build.allIn}
+              total={build.houseCost + build.rent}
               bars={[
-                ...(plan.costMode === 'total'
-                  ? [{label: 'Project', value: build.project}]
-                  : [
-                      {label: 'Construction', value: build.construction},
-                      {label: 'Land', value: build.land},
-                      {label: 'Other costs', value: build.otherCosts},
-                      {label: 'Contingency', value: build.contingency},
-                    ]),
+                {label: 'Land and build', value: build.project},
+                {label: 'Rent while building', value: build.rent},
                 {label: 'Construction interest', value: build.constructionInterest},
                 {label: 'Closing costs', value: build.closing},
               ]}
@@ -96,7 +96,11 @@ export const Overview = ({plan, build}: {plan: Plan; build: BuildCosts}) => {
 
         <Panel
           title='Monthly payment'
-          description='After the house is finished and the loan converts to a mortgage.'
+          description={
+            reset
+              ? `After the house is finished, for the first ${reset.year} years of the ARM.`
+              : 'After the house is finished and the loan converts to a mortgage.'
+          }
         >
           <div className='group-card divide-y divide-border py-1'>
             <Line
@@ -128,6 +132,18 @@ export const Overview = ({plan, build}: {plan: Plan; build: BuildCosts}) => {
               label='Total'
               value={usd(h.total)}
             />
+            {reset && (
+              <>
+                <Line
+                  label={`From year ${reset.year + 1} at ${plan.armRate}%`}
+                  value={usd(reset.expected.total)}
+                />
+                <Line
+                  label={`From year ${reset.year + 1} at the ${reset.worstRate}% cap`}
+                  value={usd(reset.worst.total)}
+                />
+              </>
+            )}
             <Line
               label={`Emergency fund to keep (${plan.reserveMonths} months)`}
               value={usd(reserveNeeded(plan, h.total))}

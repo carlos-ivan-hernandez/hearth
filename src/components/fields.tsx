@@ -1,4 +1,4 @@
-import {Label, NumberField, Switch} from '@heroui/react';
+import {Label, NumberField} from '@heroui/react';
 import type {ReactNode} from 'react';
 
 const MONEY: Intl.NumberFormatOptions = {style: 'currency', currency: 'USD', maximumFractionDigits: 0};
@@ -12,6 +12,8 @@ interface NumberRowProps {
   step?: number;
   maxValue?: number;
   suffix?: string;
+  /** A control beside the field, such as a unit switch. */
+  action?: ReactNode;
 }
 
 const NumberRow = ({
@@ -22,6 +24,7 @@ const NumberRow = ({
   step,
   maxValue,
   suffix,
+  action,
   format,
 }: NumberRowProps & {
   format: Intl.NumberFormatOptions;
@@ -35,10 +38,11 @@ const NumberRow = ({
     formatOptions={format}
     className='flex-row items-center justify-between gap-3 px-3 py-2'
   >
-    <div className='min-w-0'>
+    <div className='min-w-0 flex-1'>
       <Label className='text-sm font-normal'>{label}</Label>
       {hint && <div className='text-xs text-muted'>{hint}</div>}
     </div>
+    {action}
     <NumberField.Group className='h-8 w-32 shrink-0 [grid-template-columns:1fr_auto]'>
       <NumberField.Input className='px-2.5 text-right' />
       <span className='pr-2.5 text-xs text-muted'>{suffix}</span>
@@ -72,39 +76,43 @@ export const CountRow = (props: NumberRowProps) => (
   />
 );
 
-export const SwitchRow = ({
+/** A row of mutually exclusive options, in vera's segmented style. */
+export const Segmented = <T extends string>({
   label,
-  hint,
+  options,
   value,
   onChange,
 }: {
   label: string;
-  hint?: string;
-  value: boolean;
-  onChange: (value: boolean) => void;
+  options: {id: T; label: string}[];
+  value: T;
+  onChange: (value: T) => void;
 }) => (
-  <Switch
-    isSelected={value}
-    onChange={onChange}
-    className='flex w-full flex-row items-center justify-between gap-3 px-3 py-2.5'
+  <div
+    role='radiogroup'
+    aria-label={label}
+    className='segmented shrink-0 flex-nowrap'
   >
-    <div className='min-w-0'>
-      <Label className='text-sm font-normal'>{label}</Label>
-      {hint && <div className='text-xs text-muted'>{hint}</div>}
-    </div>
-    <Switch.Control>
-      <Switch.Thumb />
-    </Switch.Control>
-  </Switch>
+    {options.map(option => (
+      <button
+        key={option.id}
+        type='button'
+        role='radio'
+        aria-checked={value === option.id}
+        className='segmented-item'
+        data-active={value === option.id}
+        onClick={() => onChange(option.id)}
+      >
+        {option.label}
+      </button>
+    ))}
+  </div>
 );
 
 /** A titled, rounded group of rows separated by hairlines, like vera's settings. */
-export const Group = ({title, action, children}: {title: string; action?: ReactNode; children: ReactNode}) => (
+export const Group = ({title, children}: {title: string; children: ReactNode}) => (
   <section className='flex flex-col gap-1.5'>
-    <div className='flex items-center justify-between gap-2 px-1'>
-      <h3 className='section-label'>{title}</h3>
-      {action}
-    </div>
+    <h3 className='section-label px-1'>{title}</h3>
     <div className='group-card divide-y divide-border'>{children}</div>
   </section>
 );

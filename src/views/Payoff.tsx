@@ -1,12 +1,13 @@
 import {BalanceChart} from '../components/BalanceChart';
 import {Panel, Stat} from '../components/fields';
-import {amortize, type BuildCosts, duration, usd} from '../finance';
+import {amortize, type BuildCosts, duration, fixedPeriod, usd} from '../finance';
 import type {Plan} from '../plan';
 
 export const Payoff = ({plan, build}: {plan: Plan; build: BuildCosts}) => {
-  const base = amortize(build.loan, plan.rate, plan.termYears);
-  const withExtra = plan.extraMonthly > 0 ? amortize(build.loan, plan.rate, plan.termYears, plan.extraMonthly) : null;
+  const base = amortize(build.loan, plan);
+  const withExtra = plan.extraMonthly > 0 ? amortize(build.loan, plan, plan.extraMonthly) : null;
   const schedule = withExtra ?? base;
+  const resetYear = fixedPeriod(plan);
   // Lenders drop PMI once the balance falls to 78% of the home's value.
   const pmiEnds = schedule.years.find(row => row.balance <= 0.78 * (plan.completedValue || build.project))?.year;
 
@@ -36,7 +37,12 @@ export const Payoff = ({plan, build}: {plan: Plan; build: BuildCosts}) => {
         />
       </div>
 
-      <Panel title='Loan balance'>
+      <Panel
+        title='Loan balance'
+        description={
+          resetYear ? `Starts at ${plan.rate}%, then assumes ${plan.armRate}% from year ${resetYear + 1}.` : undefined
+        }
+      >
         <div className='group-card'>
           <BalanceChart
             termYears={plan.termYears}

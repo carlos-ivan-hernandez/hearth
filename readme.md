@@ -1,8 +1,8 @@
 # Hearth
 
-A planner for deciding whether to build a house and how much to borrow. Enter your household finances, the build budget (one total, or itemized as land, construction, other costs and contingency), and the mortgage terms; the results update as you type.
+A planner for deciding whether to build a house and how much to borrow. Enter your household finances, the build (total cost, rent while building, build time, construction loan rate, value when finished) and the mortgage (fixed or a 5/1, 7/1 or 10/1 ARM; closing costs as a percent or a dollar amount); the results update as you type.
 
-- **Overview** — a verdict with four checks (monthly payment, cash and emergency fund, value against cost, contingency), where the money goes, and the monthly payment.
+- **Overview** — a verdict with checks (monthly payment, payments while building, cash and emergency fund, value against cost, and for an ARM the payment after the rate resets), where the money goes, and the monthly payment.
 - **How much to borrow** — the biggest project your income and savings support, your build at different down payments (select a row to use it), and the payment if rates move.
 - **Payoff** — loan balance over time, the effect of extra principal, and a year-by-year schedule.
 
@@ -11,8 +11,8 @@ Inputs are saved in the browser's local storage. The numbers are estimates for p
 ## Assumptions
 
 - Lender guidelines: housing ≤ 28% of gross income, all debts ≤ 36%, 43% as the usual ceiling.
-- The construction loan is interest-only and about half drawn on average during the build; that interest is paid from savings.
-- Land you already own counts toward the down payment.
+- The construction loan is interest-only and about half drawn on average during the build. That interest and the rent while building are paid monthly from income; savings cover the down payment and closing costs.
+- An ARM keeps its starting rate for 5, 7 or 10 years, then the payment is recalculated on the remaining balance at the "rate after reset" for the rest of the term. The worst case uses the standard first-adjustment caps: +2% on a 5/1 (2/2/5), +5% on a 7/1 or 10/1 (5/1/5).
 - PMI applies while the loan is over 80% of the home's value.
 
 ## Development

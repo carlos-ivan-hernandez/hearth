@@ -26,7 +26,7 @@ export const Borrowing = ({plan, onPickDown}: {plan: Plan; onPickDown: (downPct:
     <div className='flex flex-col gap-6'>
       <Panel
         title='What you can afford'
-        description={`The biggest total project cost at ${plan.downPct}% down and ${plan.rate}%, counting tax, insurance, PMI and construction interest. The lower of income and savings is your real limit.`}
+        description={`The biggest total project cost at ${plan.downPct}% down and ${plan.rate}%, counting tax, insurance and PMI. The lower of income and savings is your real limit.`}
       >
         <div className='grid gap-3 sm:grid-cols-3'>
           <Stat
@@ -42,7 +42,7 @@ export const Borrowing = ({plan, onPickDown}: {plan: Plan; onPickDown: (downPct:
           <Stat
             label='Covered by savings'
             value={usd(maxCostByCash(plan))}
-            note='Down payment, closing and construction interest, keeping the emergency fund'
+            note='Down payment and closing, keeping the emergency fund'
           />
         </div>
       </Panel>
@@ -100,9 +100,7 @@ export const Borrowing = ({plan, onPickDown}: {plan: Plan; onPickDown: (downPct:
                         {left < 0 ? `${usd(-left)} short` : usd(left)}
                         {left >= 0 && short && ' · below fund'}
                       </Table.Cell>
-                      <Table.Cell className='tabular-nums'>
-                        {usd(amortize(option.loan, plan.rate, plan.termYears).totalInterest)}
-                      </Table.Cell>
+                      <Table.Cell className='tabular-nums'>{usd(amortize(option.loan, plan).totalInterest)}</Table.Cell>
                     </Table.Row>
                   );
                 })}
